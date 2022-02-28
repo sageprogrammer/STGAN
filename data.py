@@ -145,13 +145,13 @@ class Celeba(Dataset):
                  num_threads=16, shuffle=True, buffer_size=4096, repeat=-1, sess=None, part='train', crop=True, im_no=None):
         super(Celeba, self).__init__()
 
-        list_file = os.path.join(data_dir, 'list_attr_celeba.txt')
+        list_file = os.path.join(data_dir, "Anno", 'list_attr_celeba.txt')
         if crop:
-            img_dir_jpg = os.path.join(data_dir, 'img_align_celeba')
-            img_dir_png = os.path.join(data_dir, 'img_align_celeba_png')
+            img_dir_jpg = os.path.join(data_dir, "Img", 'img_align_celeba')
+            img_dir_png = os.path.join(data_dir, "Img", 'img_align_celeba_png')
         else:
-            img_dir_jpg = os.path.join(data_dir, 'img_crop_celeba')
-            img_dir_png = os.path.join(data_dir, 'img_crop_celeba_png')
+            img_dir_jpg = os.path.join(data_dir, "Img", 'img_crop_celeba')
+            img_dir_png = os.path.join(data_dir, "Img", 'img_crop_celeba_png')
 
         names = np.loadtxt(list_file, skiprows=2, usecols=[0], dtype=np.str)
         if os.path.exists(img_dir_png):

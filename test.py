@@ -27,7 +27,8 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('--experiment_name', help='experiment_name')
 parser.add_argument('--gpu', type=str, default='all', help='gpu')
-parser.add_argument('--dataroot', type=str, default='/data/Datasets/CelebA/Img')
+parser.add_argument('--dataroot', type=str, default='/data/Datasets/CelebA')
+parser.add_argument('--project_dataroot', type=str, default='.')
 # if assigned, only given images will be tested.
 parser.add_argument('--img', type=int, nargs='+', default=None, help='e.g., --img 182638 202599')
 # for multiple attributes
@@ -42,7 +43,7 @@ parser.add_argument('--test_att', type=str, default=None)
 parser.add_argument('--test_int_min', type=float, default=-1.0)
 parser.add_argument('--test_int_max', type=float, default=1.0)
 args_ = parser.parse_args()
-with open('./output/%s/setting.txt' % args_.experiment_name) as f:
+with open('%s/output/%s/setting.txt' % (args_.project_dataroot,args_.experiment_name)) as f:
     args = json.load(f)
 
 # model
@@ -175,10 +176,14 @@ try:
                                                                    raw_b_sample: raw_a_sample_ipt}))
         sample = np.concatenate(x_sample_opt_list, 2)
 
-        if test_slide:     save_folder = 'sample_testing_slide'
-        elif multi_atts:   save_folder = 'sample_testing_multi'
-        else:              save_folder = 'sample_testing'
-        save_dir = './output/%s/%s' % (experiment_name, save_folder)
+        if test_slide:
+            save_folder = 'sample_testing_slide'
+        elif multi_atts:
+            save_folder = 'sample_testing_multi'
+        else:
+            save_folder = 'sample_testing'
+        save_dir = '%s/output/%s/%s' % (args_.project_dataroot,
+                                        experiment_name, save_folder)
         pylib.mkdir(save_dir)
         im.imwrite(sample.squeeze(0), '%s/%06d%s.png' % (save_dir,
                                                          idx + 182638 if img is None else img[idx], 
