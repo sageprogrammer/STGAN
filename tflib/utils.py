@@ -10,10 +10,10 @@ import tensorflow as tf
 def session(graph=None, allow_soft_placement=True,
             log_device_placement=False, allow_growth=True):
     """Return a Session with simple config."""
-    config = tf.ConfigProto(allow_soft_placement=allow_soft_placement,
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=allow_soft_placement,
                             log_device_placement=log_device_placement)
     config.gpu_options.allow_growth = allow_growth
-    return tf.Session(graph=graph, config=config)
+    return tf.compat.v1.Session(graph=graph, config=config)
 
 
 def print_tensor(tensors):
@@ -61,29 +61,29 @@ def summary(tensor_collection,
 
         summaries = []
         if len(tensor.shape) == 0:
-            summaries.append(tf.summary.scalar(name, tensor))
+            summaries.append(tf.compat.v1.summary.scalar(name, tensor))
         else:
             if 'mean' in summary_type:
-                mean = tf.reduce_mean(tensor)
-                summaries.append(tf.summary.scalar(name + '/mean', mean))
+                mean = tf.compat.v1.reduce_mean(tensor)
+                summaries.append(tf.compat.v1.summary.scalar(name + '/mean', mean))
             if 'stddev' in summary_type:
-                mean = tf.reduce_mean(tensor)
-                stddev = tf.sqrt(tf.reduce_mean(tf.square(tensor - mean)))
-                summaries.append(tf.summary.scalar(name + '/stddev', stddev))
+                mean = tf.compat.v1.reduce_mean(tensor)
+                stddev = tf.compat.v1.sqrt(tf.compat.v1.reduce_mean(tf.compat.v1.square(tensor - mean)))
+                summaries.append(tf.compat.v1.summary.scalar(name + '/stddev', stddev))
             if 'max' in summary_type:
-                summaries.append(tf.summary.scalar(name + '/max', tf.reduce_max(tensor)))
+                summaries.append(tf.compat.v1.summary.scalar(name + '/max', tf.compat.v1.reduce_max(tensor)))
             if 'min' in summary_type:
-                summaries.append(tf.summary.scalar(name + '/min', tf.reduce_min(tensor)))
+                summaries.append(tf.compat.v1.summary.scalar(name + '/min', tf.compat.v1.reduce_min(tensor)))
             if 'sparsity' in summary_type:
-                summaries.append(tf.summary.scalar(name + '/sparsity', tf.nn.zero_fraction(tensor)))
+                summaries.append(tf.compat.v1.summary.scalar(name + '/sparsity', tf.compat.v1.nn.zero_fraction(tensor)))
             if 'histogram' in summary_type:
-                summaries.append(tf.summary.histogram(name, tensor))
-        return tf.summary.merge(summaries)
+                summaries.append(tf.compat.v1.summary.histogram(name, tensor))
+        return tf.compat.v1.summary.merge(summaries)
 
     if not isinstance(tensor_collection, (list, tuple, dict)):
         tensor_collection = [tensor_collection]
 
-    with tf.name_scope(scope, 'summary'):
+    with tf.compat.v1.name_scope(scope, 'summary'):
         summaries = []
         if isinstance(tensor_collection, (list, tuple)):
             for tensor in tensor_collection:
@@ -91,14 +91,14 @@ def summary(tensor_collection,
         else:
             for tensor, name in tensor_collection.items():
                 summaries.append(_summary(tensor, name, summary_type))
-        return tf.summary.merge(summaries)
+        return tf.compat.v1.summary.merge(summaries)
 
 
 def counter(start=0, scope=None):
-    with tf.variable_scope(scope, 'counter'):
-        counter = tf.get_variable(name='counter',
-                                  initializer=tf.constant_initializer(start),
+    with tf.compat.v1.variable_scope(scope, 'counter'):
+        counter = tf.compat.v1.get_variable(name='counter',
+                                  initializer=tf.compat.v1.constant_initializer(start),
                                   shape=(),
-                                  dtype=tf.int64)
-        update_cnt = tf.assign(counter, tf.add(counter, 1))
+                                  dtype=tf.compat.v1.int64)
+        update_cnt = tf.compat.v1.assign(counter, tf.compat.v1.add(counter, 1))
         return counter, update_cnt

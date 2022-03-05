@@ -150,10 +150,10 @@ with open('./output/%s/setting.txt' % experiment_name, 'w') as f:
 
 # data
 if threads >= 0:
-    cpu_config = tf.ConfigProto(intra_op_parallelism_threads = threads//2,
+    cpu_config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads = threads//2,
                                 inter_op_parallelism_threads = threads//2,
                                 device_count = {'CPU': threads})
-    sess = tf.Session(config=cpu_config)
+    sess = tf.compat.v1.Session(config=cpu_config)
 else:
     sess = tl.session()
 crop_ = not use_cropped_img
@@ -169,23 +169,23 @@ Gstu = partial(models.Gstu, dim=stu_dim, n_layers=stu_layers, inject_layers=stu_
 D = partial(models.D, n_att=n_att, dim=dis_dim, fc_dim=dis_fc_dim, n_layers=dis_layers)
 
 # inputs
-lr = tf.placeholder(dtype=tf.float32, shape=[])
+lr = tf.compat.v1.placeholder(dtype=tf.compat.v1.float32, shape=[])
 
 xa = tr_data.batch_op[0]
 a = tr_data.batch_op[1]
-b = tf.random_shuffle(a)
-_a = (tf.to_float(a) * 2 - 1) * thres_int
-_b = (tf.to_float(b) * 2 - 1) * thres_int
+b = tf.compat.v1.random_shuffle(a)
+_a = (tf.compat.v1.to_float(a) * 2 - 1) * thres_int
+_b = (tf.compat.v1.to_float(b) * 2 - 1) * thres_int
 
-xa_sample = tf.placeholder(tf.float32, shape=[None, img_size, img_size, 3])
-_b_sample = tf.placeholder(tf.float32, shape=[None, n_att])
-raw_b_sample = tf.placeholder(tf.float32, shape=[None, n_att])
+xa_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, img_size, img_size, 3])
+_b_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, n_att])
+raw_b_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, n_att])
 
 # generate
 z = Genc(xa)
 zb = Gstu(z, _b-_a if label=='diff' else _b) if use_stu else z
 xb_ = Gdec(zb, _b-_a if label=='diff' else _b)
-with tf.control_dependencies([xb_]):
+with tf.compat.v1.control_dependencies([xb_]):
     za = Gstu(z, _a-_a if label=='diff' else _a) if use_stu else z
     xa_ = Gdec(za, _a-_a if label=='diff' else _a)
 
@@ -195,43 +195,43 @@ xb__logit_gan, xb__logit_att = D(xb_)
 
 # discriminator losses
 if mode == 'wgan':  # wgan-gp
-    wd = tf.reduce_mean(xa_logit_gan) - tf.reduce_mean(xb__logit_gan)
+    wd = tf.compat.v1.reduce_mean(xa_logit_gan) - tf.compat.v1.reduce_mean(xb__logit_gan)
     d_loss_gan = -wd
     gp = models.gradient_penalty(D, xa, xb_)
 elif mode == 'lsgan':  # lsgan-gp
-    xa_gan_loss = tf.losses.mean_squared_error(tf.ones_like(xa_logit_gan), xa_logit_gan)
-    xb__gan_loss = tf.losses.mean_squared_error(tf.zeros_like(xb__logit_gan), xb__logit_gan)
+    xa_gan_loss = tf.compat.v1.losses.mean_squared_error(tf.compat.v1.ones_like(xa_logit_gan), xa_logit_gan)
+    xb__gan_loss = tf.compat.v1.losses.mean_squared_error(tf.compat.v1.zeros_like(xb__logit_gan), xb__logit_gan)
     d_loss_gan = xa_gan_loss + xb__gan_loss
     gp = models.gradient_penalty(D, xa)
 elif mode == 'dcgan':  # dcgan-gp
-    xa_gan_loss = tf.losses.sigmoid_cross_entropy(tf.ones_like(xa_logit_gan), xa_logit_gan)
-    xb__gan_loss = tf.losses.sigmoid_cross_entropy(tf.zeros_like(xb__logit_gan), xb__logit_gan)
+    xa_gan_loss = tf.compat.v1.losses.sigmoid_cross_entropy(tf.compat.v1.ones_like(xa_logit_gan), xa_logit_gan)
+    xb__gan_loss = tf.compat.v1.losses.sigmoid_cross_entropy(tf.compat.v1.zeros_like(xb__logit_gan), xb__logit_gan)
     d_loss_gan = xa_gan_loss + xb__gan_loss
     gp = models.gradient_penalty(D, xa)
 
-xa_loss_att = tf.losses.sigmoid_cross_entropy(a, xa_logit_att)
+xa_loss_att = tf.compat.v1.losses.sigmoid_cross_entropy(a, xa_logit_att)
 
 d_loss = d_loss_gan + gp * 10.0 + xa_loss_att
 
 # generator losses
 if mode == 'wgan':
-    xb__loss_gan = -tf.reduce_mean(xb__logit_gan)
+    xb__loss_gan = -tf.compat.v1.reduce_mean(xb__logit_gan)
 elif mode == 'lsgan':
-    xb__loss_gan = tf.losses.mean_squared_error(tf.ones_like(xb__logit_gan), xb__logit_gan)
+    xb__loss_gan = tf.compat.v1.losses.mean_squared_error(tf.compat.v1.ones_like(xb__logit_gan), xb__logit_gan)
 elif mode == 'dcgan':
-    xb__loss_gan = tf.losses.sigmoid_cross_entropy(tf.ones_like(xb__logit_gan), xb__logit_gan)
+    xb__loss_gan = tf.compat.v1.losses.sigmoid_cross_entropy(tf.compat.v1.ones_like(xb__logit_gan), xb__logit_gan)
 
-xb__loss_att = tf.losses.sigmoid_cross_entropy(b, xb__logit_att)
-xa__loss_rec = tf.losses.absolute_difference(xa, xa_)
+xb__loss_att = tf.compat.v1.losses.sigmoid_cross_entropy(b, xb__logit_att)
+xa__loss_rec = tf.compat.v1.losses.absolute_difference(xa, xa_)
 
 g_loss = xb__loss_gan + xb__loss_att * 10.0 + xa__loss_rec * rec_loss_weight
 
 # optim
 d_var = tl.trainable_variables('D')
-d_step = tf.train.AdamOptimizer(lr, beta1=0.5).minimize(d_loss, var_list=d_var)
+d_step = tf.compat.v1.train.AdamOptimizer(lr, beta1=0.5).minimize(d_loss, var_list=d_var)
 
 g_var = tl.trainable_variables('G')
-g_step = tf.train.AdamOptimizer(lr, beta1=0.5).minimize(g_loss, var_list=g_var)
+g_step = tf.compat.v1.train.AdamOptimizer(lr, beta1=0.5).minimize(g_loss, var_list=g_var)
 
 # summary
 show_weights = False
@@ -251,30 +251,30 @@ g_summary = tl.summary({
     xa__loss_rec: 'xa__loss_rec',
 }, scope='G')
 if show_weights:
-    d_histogram = tf.summary.merge([tf.summary.histogram(
+    d_histogram = tf.compat.v1.summary.merge([tf.compat.v1.summary.histogram(
         name=i.name,
         values=i
-    ) for i in tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, 'D')])
+    ) for i in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.MODEL_VARIABLES, 'D')])
     
-    genc_histogram = tf.summary.merge([tf.summary.histogram(
+    genc_histogram = tf.compat.v1.summary.merge([tf.compat.v1.summary.histogram(
         name=i.name,
         values=i
-    ) for i in tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, 'Genc')])
+    ) for i in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.MODEL_VARIABLES, 'Genc')])
         
-    gdec_histogram = tf.summary.merge([tf.summary.histogram(
+    gdec_histogram = tf.compat.v1.summary.merge([tf.compat.v1.summary.histogram(
         name=i.name,
         values=i
-    ) for i in tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, 'Gdec')])
+    ) for i in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.MODEL_VARIABLES, 'Gdec')])
     
-    gstu_histogram = tf.summary.merge([tf.summary.histogram(
+    gstu_histogram = tf.compat.v1.summary.merge([tf.compat.v1.summary.histogram(
         name=i.name,
         values=i
-    ) for i in tf.get_collection(tf.GraphKeys.MODEL_VARIABLES, 'Gstu')])
+    ) for i in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.MODEL_VARIABLES, 'Gstu')])
     
-    d_summary = tf.summary.merge([d_summary, lr_summary, d_histogram])
-    g_summary = tf.summary.merge([g_summary, genc_histogram, gdec_histogram, gstu_histogram])
+    d_summary = tf.compat.v1.summary.merge([d_summary, lr_summary, d_histogram])
+    g_summary = tf.compat.v1.summary.merge([g_summary, genc_histogram, gdec_histogram, gstu_histogram])
 else:
-    d_summary = tf.summary.merge([d_summary, lr_summary])
+    d_summary = tf.compat.v1.summary.merge([d_summary, lr_summary])
 
 # sample
 test_label = _b_sample - raw_b_sample if label=='diff' else _b_sample
@@ -292,10 +292,10 @@ else:
 it_cnt, update_cnt = tl.counter()
 
 # saver
-saver = tf.train.Saver(max_to_keep=num_ckpt)
+saver = tf.compat.v1.train.Saver(max_to_keep=num_ckpt)
 
 # summary writer
-summary_writer = tf.summary.FileWriter('./output/%s/summaries' % experiment_name, sess.graph)
+summary_writer = tf.compat.v1.summary.FileWriter('./output/%s/summaries' % experiment_name, sess.graph)
 
 # initialization
 ckpt_dir = './output/%s/checkpoints' % experiment_name
@@ -306,7 +306,7 @@ try:
     tl.load_checkpoint(ckpt_dir, sess)
 except:
     print('NOTE: Initializing all parameters...')
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf.compat.v1.global_variables_initializer())
 
 # train
 try:

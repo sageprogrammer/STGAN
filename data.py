@@ -22,7 +22,7 @@ def batch_dataset(dataset, batch_size, prefetch_batch=2, drop_remainder=True, fi
         dataset = dataset.shuffle(buffer_size)
 
     if drop_remainder:
-        dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+        dataset = dataset.apply(tf.compat.v1.contrib.data.batch_and_drop_remainder(batch_size))
     else:
         dataset = dataset.batch(batch_size)
 
@@ -41,15 +41,15 @@ def disk_image_batch_dataset(img_paths, batch_size, labels=None, prefetch_batch=
     labels: label list/tuple_of_list or tensor/tuple_of_tensor, each of which is a corresponding label
     """
     if labels is None:
-        dataset = tf.data.Dataset.from_tensor_slices(img_paths)
+        dataset = tf.compat.v1.data.Dataset.from_tensor_slices(img_paths)
     elif isinstance(labels, tuple):
-        dataset = tf.data.Dataset.from_tensor_slices((img_paths,) + tuple(labels))
+        dataset = tf.compat.v1.data.Dataset.from_tensor_slices((img_paths,) + tuple(labels))
     else:
-        dataset = tf.data.Dataset.from_tensor_slices((img_paths, labels))
+        dataset = tf.compat.v1.data.Dataset.from_tensor_slices((img_paths, labels))
 
     def parse_func(path, *label):
-        img = tf.read_file(path)
-        img = tf.image.decode_png(img, 3)
+        img = tf.compat.v1.read_file(path)
+        img = tf.compat.v1.image.decode_png(img, 3)
         return (img,) + label
 
     if map_func:
@@ -148,7 +148,8 @@ class Celeba(Dataset):
         list_file = os.path.join(data_dir, "Anno", 'list_attr_celeba.txt')
         if crop:
             img_dir_jpg = os.path.join(data_dir, "Img", 'img_align_celeba')
-            img_dir_png = os.path.join(data_dir, "Img", 'img_align_celeba_png')
+            img_dir_png = os.path.join(
+                data_dir, "Img", 'img_align_celeba_png', "img_align_celeba_png")
         else:
             img_dir_jpg = os.path.join(data_dir, "Img", 'img_crop_celeba')
             img_dir_png = os.path.join(data_dir, "Img", 'img_crop_celeba_png')
@@ -174,11 +175,11 @@ class Celeba(Dataset):
 
         def _map_func(img, label):
             if crop:
-                img = tf.image.crop_to_bounding_box(img, offset_h, offset_w, img_size, img_size)
-            # img = tf.image.resize_images(img, [img_resize, img_resize]) / 127.5 - 1
+                img = tf.compat.v1.image.crop_to_bounding_box(img, offset_h, offset_w, img_size, img_size)
+            # img = tf.compat.v1.image.resize_images(img, [img_resize, img_resize]) / 127.5 - 1
             # or
-            img = tf.image.resize_images(img, [img_resize, img_resize], tf.image.ResizeMethod.BICUBIC)
-            img = tf.clip_by_value(img, 0, 255) / 127.5 - 1
+            img = tf.compat.v1.image.resize_images(img, [img_resize, img_resize], tf.compat.v1.image.ResizeMethod.BICUBIC)
+            img = tf.compat.v1.clip_by_value(img, 0, 255) / 127.5 - 1
             label = (label + 1) // 2
             return img, label
 

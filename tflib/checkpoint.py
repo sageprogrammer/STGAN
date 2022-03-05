@@ -12,16 +12,16 @@ def load_checkpoint(ckpt_dir_or_file, session, var_list=None):
 
     Note:
         This function add some useless ops to the graph. It is better
-        to use tf.train.init_from_checkpoint(...).
+        to use tf.compat.v1.train.init_from_checkpoint(...).
     """
     if os.path.isdir(ckpt_dir_or_file):
-        ckpt_dir_or_file = tf.train.latest_checkpoint(ckpt_dir_or_file)
+        ckpt_dir_or_file = tf.compat.v1.train.latest_checkpoint(ckpt_dir_or_file)
 
-    restorer = tf.train.Saver(var_list)
+    restorer = tf.compat.v1.train.Saver(var_list)
     restorer.restore(session, ckpt_dir_or_file)
     print(' [*] Loading checkpoint succeeds! Copy variables from % s!' % ckpt_dir_or_file)
 
 
 def init_from_checkpoint(ckpt_dir_or_file, assignment_map={'/': '/'}):
-    tf.train.init_from_checkpoint(ckpt_dir_or_file, assignment_map)
+    tf.compat.v1.train.init_from_checkpoint(ckpt_dir_or_file, assignment_map)
     print(' [*] Loading checkpoint succeeds! Copy variables from % s!' % ckpt_dir_or_file)

@@ -3,24 +3,24 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
+import tf_slim as slim
 
 
 def flatten_fully_connected(inputs,
                             num_outputs,
-                            activation_fn=tf.nn.relu,
+                            activation_fn=tf.compat.v1.nn.relu,
                             normalizer_fn=None,
                             normalizer_params=None,
                             weights_initializer=slim.xavier_initializer(),
                             weights_regularizer=None,
-                            biases_initializer=tf.zeros_initializer(),
+                            biases_initializer=tf.compat.v1.zeros_initializer(),
                             biases_regularizer=None,
                             reuse=None,
                             variables_collections=None,
                             outputs_collections=None,
                             trainable=True,
                             scope=None):
-    with tf.variable_scope(scope, 'flatten_fully_connected', [inputs]):
+    with tf.compat.v1.variable_scope(scope, 'flatten_fully_connected', [inputs]):
         if inputs.shape.ndims > 2:
             inputs = slim.flatten(inputs)
         return slim.fully_connected(inputs,
