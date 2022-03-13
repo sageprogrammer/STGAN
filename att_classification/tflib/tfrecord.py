@@ -10,17 +10,18 @@ import shutil
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 __metaclass__ = type
 
 
 DECODERS = {
-    'png': {'decoder': tf.image.decode_png, 'decode_param': dict()},
-    'jpg': {'decoder': tf.image.decode_jpeg, 'decode_param': dict()},
-    'jpeg': {'decoder': tf.image.decode_jpeg, 'decode_param': dict()},
-    'uint8': {'decoder': tf.decode_raw, 'decode_param': dict(out_type=tf.uint8)},
-    'float32': {'decoder': tf.decode_raw, 'decode_param': dict(out_type=tf.float32)},
-    'int64': {'decoder': tf.decode_raw, 'decode_param': dict(out_type=tf.int64)},
+    'png': {'decoder': tf1.image.decode_png, 'decode_param': dict()},
+    'jpg': {'decoder': tf1.image.decode_jpeg, 'decode_param': dict()},
+    'jpeg': {'decoder': tf1.image.decode_jpeg, 'decode_param': dict()},
+    'uint8': {'decoder': tf1.decode_raw, 'decode_param': dict(out_type=tf1.uint8)},
+    'float32': {'decoder': tf1.decode_raw, 'decode_param': dict(out_type=tf1.float32)},
+    'int64': {'decoder': tf1.decode_raw, 'decode_param': dict(out_type=tf1.int64)},
 }
 ALLOWED_TYPES = DECODERS.keys()
 
@@ -36,17 +37,17 @@ class BytesTfrecordCreator(object):
 
     @staticmethod
     def bytes_feature(values):
-        """Return a TF-Feature of bytes.
+        """Return a tf1-Feature of bytes.
 
         Args:
           values: A byte string or list of byte strings.
 
         Returns:
-          a TF-Feature.
+          a tf1-Feature.
         """
         if not isinstance(values, (tuple, list)):
             values = [values]
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=values))
+        return tf1.train.Feature(bytes_list=tf1.train.BytesList(value=values))
 
     @staticmethod
     def bytes_tfexample(bytes_dict):
@@ -63,7 +64,7 @@ class BytesTfrecordCreator(object):
         feature_dict = {}
         for key, value in bytes_dict.items():
             feature_dict[key] = BytesTfrecordCreator.bytes_feature(value)
-        return tf.train.Example(features=tf.train.Features(feature=feature_dict))
+        return tf1.train.Example(features=tf1.train.Features(feature=feature_dict))
 
     def __init__(self, save_path, block_size=None, compression_type=0, overwrite_existing=False):
         self.save_path = save_path
@@ -76,7 +77,7 @@ class BytesTfrecordCreator(object):
         else:
             os.makedirs(save_path)
 
-        self.options = tf.python_io.TFRecordOptions(compression_type)
+        self.options = tf1.python_io.TFRecordOptions(compression_type)
         self.info_f = open(os.path.join(save_path, 'info.txt'), 'w')
 
         self.feature_names = None
@@ -109,7 +110,7 @@ class BytesTfrecordCreator(object):
                 self.writer.close()
 
             tf_record_path = os.path.join(self.save_path, 'data_%06d.tfrecord' % (self.block_num - 1))
-            self.writer = tf.python_io.TFRecordWriter(tf_record_path, self.options)
+            self.writer = tf1.python_io.TFRecordWriter(tf_record_path, self.options)
 
         if self.feature_names is None:
             self.feature_names = feature_bytes_dict.keys()
@@ -322,30 +323,30 @@ def tfrecord_batch(tfrecord_files, info_list, batch_size, preprocess_fns={},
 
     info_list:
         for example
-        [{'name': 'img', 'decoder': tf.image.decode_png, 'decode_param': {}, 'shape': [112, 112, 1]},
-         {'name': 'point', 'decoder': tf.decode_raw, 'decode_param': dict(out_type = tf.float32), 'shape':[136]}]
+        [{'name': 'img', 'decoder': tf1.image.decode_png, 'decode_param': {}, 'shape': [112, 112, 1]},
+         {'name': 'point', 'decoder': tf1.decode_raw, 'decode_param': dict(out_type = tf1.float32), 'shape':[136]}]
 
     preprocess_fns:
         for example
         {'img': img_preprocess_fn, 'point': point_preprocess_fn}
     """
-    with tf.name_scope(scope, 'tfrecord_batch'):
-        options = tf.python_io.TFRecordOptions(compression_type)
+    with tf1.name_scope(scope, 'tfrecord_batch'):
+        options = tf1.python_io.TFRecordOptions(compression_type)
 
         features = {}
         fields = []
         for info in info_list:
-            features[info['name']] = tf.FixedLenFeature([], tf.string)
+            features[info['name']] = tf1.FixedLenFeature([], tf1.string)
             fields += [info['name']]
 
         # read the next record (there is only one tfrecord file in the file queue)
-        _, serialized_example = tf.TFRecordReader(options=options).read(
-            tf.train.string_input_producer(tfrecord_files,
+        _, serialized_example = tf1.TFRecordReader(options=options).read(
+            tf1.train.string_input_producer(tfrecord_files,
                                            shuffle=shuffle,
                                            capacity=len(tfrecord_files)))
 
         # parse the record
-        features = tf.parse_single_example(serialized_example, features=features)
+        features = tf1.parse_single_example(serialized_example, features=features)
 
         # decode, set shape and preprocess
         data_dict = {}
@@ -356,7 +357,7 @@ def tfrecord_batch(tfrecord_files, info_list, batch_size, preprocess_fns={},
             shape = info['shape']
 
             feature = decoder(features[name], **decode_param)
-            feature = tf.reshape(feature, shape)
+            feature = tf1.reshape(feature, shape)
             if name in preprocess_fns:
                 feature = preprocess_fns[name](feature)
             data_dict[name] = feature
@@ -364,13 +365,13 @@ def tfrecord_batch(tfrecord_files, info_list, batch_size, preprocess_fns={},
         # batch datas
         if shuffle:
             capacity = min_after_dequeue + (num_threads + 1) * batch_size
-            data_batch = tf.train.shuffle_batch(data_dict,
+            data_batch = tf1.train.shuffle_batch(data_dict,
                                                 batch_size=batch_size,
                                                 capacity=capacity,
                                                 min_after_dequeue=min_after_dequeue,
                                                 num_threads=num_threads)
         else:
-            data_batch = tf.train.batch(data_dict, batch_size=batch_size)
+            data_batch = tf1.train.batch(data_dict, batch_size=batch_size)
 
         return data_batch, fields
 
@@ -412,23 +413,23 @@ class TfrecordData(object):
         self.shapes = {info['name']: tuple(info['shape']) for info in info_list}
 
         # graph
-        self.graph = tf.Graph()  # declare ops in a separated graph
+        self.graph = tf1.Graph()  # declare ops in a separated graph
         with self.graph.as_default():
             # TODO
             # There are some strange errors if the gpu device is the
             # same with the main graph, but cpu device is ok. I don't know why...
-            with tf.device('/cpu:0'):
+            with tf1.device('/cpu:0'):
                 self.batch_ops, self._fields = tfrecord_batch(tfrecord_files, info_list, batch_size,
                                                               preprocess_fns, shuffle, num_threads,
                                                               min_after_dequeue, scope, compression_type)
 
         print(' [*] TfrecordData: create session!')
 
-        config = tf.ConfigProto(allow_soft_placement=True)
+        config = tf1.ConfigProto(allow_soft_placement=True)
         config.gpu_options.allow_growth = True
-        self.sess = tf.Session(graph=self.graph, config=config)
-        self.coord = tf.train.Coordinator()
-        self.threads = tf.train.start_queue_runners(sess=self.sess,
+        self.sess = tf1.Session(graph=self.graph, config=config)
+        self.coord = tf1.train.Coordinator()
+        self.threads = tf1.train.start_queue_runners(sess=self.sess,
                                                     coord=self.coord)
 
         # iterator

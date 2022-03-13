@@ -5,6 +5,7 @@ from __future__ import print_function
 from functools import partial
 
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 
 def tensors_filter(tensors,
@@ -52,13 +53,13 @@ def get_collection(key,
                    includes_combine_type='or',
                    excludes=[],
                    excludes_combine_type='and'):
-    tensors = tf.get_collection(key)
+    tensors = tf1.get_collection(key)
     return tensors_filter(tensors,
                           includes,
                           includes_combine_type,
                           excludes,
                           excludes_combine_type)
 
-global_variables = partial(get_collection, key=tf.GraphKeys.GLOBAL_VARIABLES)
-trainable_variables = partial(get_collection, key=tf.GraphKeys.TRAINABLE_VARIABLES)
-update_ops = partial(get_collection, key=tf.GraphKeys.UPDATE_OPS)
+global_variables = partial(get_collection, key=tf1.GraphKeys.GLOBAL_VARIABLES)
+trainable_variables = partial(get_collection, key=tf1.GraphKeys.TRAINABLE_VARIABLES)
+update_ops = partial(get_collection, key=tf1.GraphKeys.UPDATE_OPS)

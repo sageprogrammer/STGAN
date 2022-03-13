@@ -6,6 +6,7 @@ import multiprocessing
 
 import numpy as np
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 from tflib.data.dataset import batch_dataset, Dataset
 
@@ -30,7 +31,7 @@ def memory_data_batch_dataset(memory_data_dict,
         {'img': img_tftensor, 'label': label_tftensor}
         * The value of each item of `memory_data_dict` is in shape of (N, ...).
     """
-    dataset = tf.data.Dataset.from_tensor_slices(memory_data_dict)
+    dataset = tf1.data.Dataset.from_tensor_slices(memory_data_dict)
     dataset = batch_dataset(dataset,
                             batch_size,
                             prefetch_batch,
@@ -94,15 +95,15 @@ if __name__ == '__main__':
                            [5, 6]])}
 
     def filter(x):
-        return tf.cond(x['a'] > 2, lambda: tf.constant(True), lambda: tf.constant(False))
+        return tf1.cond(x['a'] > 2, lambda: tf1.constant(True), lambda: tf1.constant(False))
 
     def map_func(x):
         x['a'] = x['a'] * 10
         return x
 
-    # tf.enable_eager_execution()
+    # tf1.enable_eager_execution()
 
-    s = tf.Session()
+    s = tf1.Session()
 
     dataset = MemoryData(data,
                          2,
@@ -117,4 +118,4 @@ if __name__ == '__main__':
     for i in range(5):
         print(map(dataset.get_next().__getitem__, ['b', 'a']))
 
-    print([n.name for n in tf.get_default_graph().as_graph_def().node])
+    print([n.name for n in tf1.get_default_graph().as_graph_def().node])

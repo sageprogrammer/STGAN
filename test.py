@@ -12,7 +12,8 @@ import imlib as im
 import numpy as np
 import pylib
 import tensorflow as tf
-tf.compat.v1.disable_eager_execution()
+tf1 = tf.compat.v1
+tf1.disable_eager_execution()
 import tflib as tl
 
 import data
@@ -121,9 +122,9 @@ Gstu = partial(models.Gstu, dim=stu_dim, n_layers=stu_layers, inject_layers=stu_
                kernel_size=stu_kernel_size, norm=stu_norm, pass_state=stu_state)
 
 # inputs
-xa_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, img_size, img_size, 3])
-_b_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, n_att])
-raw_b_sample = tf.compat.v1.placeholder(tf.compat.v1.float32, shape=[None, n_att])
+xa_sample = tf1.placeholder(tf1.float32, shape=[None, img_size, img_size, 3])
+_b_sample = tf1.placeholder(tf1.float32, shape=[None, n_att])
+raw_b_sample = tf1.placeholder(tf1.float32, shape=[None, n_att])
 
 # sample
 test_label = _b_sample - raw_b_sample if label == 'diff' else _b_sample

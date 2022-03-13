@@ -5,6 +5,7 @@ from __future__ import print_function
 import multiprocessing
 
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 from tflib.data.memory_data import MemoryData
 
@@ -26,7 +27,7 @@ class Mnist(MemoryData):
                  buffer_size=None,
                  repeat=-1,
                  sess=None):
-        (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data(path='mnist.npz')
+        (x_train, y_train), (x_test, y_test) = tf1.keras.datasets.mnist.load_data(path='mnist.npz')
         if split == 'train':
             imgs, lbls = x_train, y_train
         elif split == 'test':
@@ -37,8 +38,8 @@ class Mnist(MemoryData):
 
         imgs.shape = imgs.shape + (1,)
 
-        imgs_pl = tf.placeholder(tf.float32, imgs.shape)
-        lbls_pl = tf.placeholder(tf.int64, lbls.shape)
+        imgs_pl = tf1.placeholder(tf1.float32, imgs.shape)
+        lbls_pl = tf1.placeholder(tf1.int64, lbls.shape)
 
         memory_data_dict = {'img': imgs_pl, 'lbl': lbls_pl}
 

@@ -5,6 +5,7 @@ from __future__ import print_function
 import multiprocessing
 
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 from tflib.data.dataset import batch_dataset, Dataset
 
@@ -32,15 +33,15 @@ def disk_image_batch_dataset(img_paths,
         labels    : Label list/tuple_of_list or tensor/tuple_of_tensor, each of which is a corresponding label
     """
     if labels is None:
-        dataset = tf.data.Dataset.from_tensor_slices(img_paths)
+        dataset = tf1.data.Dataset.from_tensor_slices(img_paths)
     elif isinstance(labels, tuple):
-        dataset = tf.data.Dataset.from_tensor_slices((img_paths,) + tuple(labels))
+        dataset = tf1.data.Dataset.from_tensor_slices((img_paths,) + tuple(labels))
     else:
-        dataset = tf.data.Dataset.from_tensor_slices((img_paths, labels))
+        dataset = tf1.data.Dataset.from_tensor_slices((img_paths, labels))
 
     def parse_func(path, *label):
-        img = tf.read_file(path)
-        img = tf.image.decode_png(img, 3)
+        img = tf1.read_file(path)
+        img = tf1.image.decode_png(img, 3)
         return (img,) + label
 
     if map_func:
@@ -119,16 +120,16 @@ if __name__ == '__main__':
     labels = list(range(len(paths)))
 
     def filter(x, y, *args):
-        return tf.cond(y > 1, lambda: tf.constant(True), lambda: tf.constant(False))
+        return tf1.cond(y > 1, lambda: tf1.constant(True), lambda: tf1.constant(False))
 
     def map_func(x, *args):
-        x = tf.image.resize_images(x, [256, 256])
-        x = tf.to_float((x - tf.reduce_min(x)) / (tf.reduce_max(x) - tf.reduce_min(x)) * 2 - 1)
+        x = tf1.image.resize_images(x, [256, 256])
+        x = tf1.to_float((x - tf1.reduce_min(x)) / (tf1.reduce_max(x) - tf1.reduce_min(x)) * 2 - 1)
         return (x,) + args
 
-    tf.enable_eager_execution()
+    tf1.enable_eager_execution()
 
-    s = tf.Session()
+    s = tf1.Session()
 
     data = DiskImageData(paths, 32, (labels, labels), filter=None, map_func=None, shuffle=True, sess=s)
 

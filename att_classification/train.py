@@ -8,6 +8,7 @@ import traceback
 import numpy as np
 import tflib as tl
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -25,63 +26,63 @@ test_data_pool = tl.TfrecordData(test_tfrecord_path, 100)
 att_dim = 40
 
 def mean_accuracy_multi_binary_label_with_logits(att, logits):
-#    return tf.count_nonzero(tf.equal(tf.greater(logits, 0.5), tf.greater(tf.to_float(att), 0.5)))
-#    return tf.reduce_mean(tf.to_float(tf.equal(tf.to_int64(tf.round(logits)), att)))
-    #return tf.reduce_mean(tf.cast(tf.equal(tf.arg_max(att,1))))
-    return tf.reduce_mean(tf.to_float(tf.equal(tf.to_int64(tf.greater(logits, 0.0)), att)))
+#    return tf1.count_nonzero(tf1.equal(tf1.greater(logits, 0.5), tf1.greater(tf1.to_float(att), 0.5)))
+#    return tf1.reduce_mean(tf1.to_float(tf1.equal(tf1.to_int64(tf1.round(logits)), att)))
+    #return tf1.reduce_mean(tf1.cast(tf1.equal(tf1.arg_max(att,1))))
+    return tf1.reduce_mean(tf1.to_float(tf1.equal(tf1.to_int64(tf1.greater(logits, 0.0)), att)))
 
 """ graphs """
-#with tf.device('/gpu:%d' % gpu_id):
+#with tf1.device('/gpu:%d' % gpu_id):
 ''' models '''
 classifier = models.classifier
 
 ''' graph '''
 # inputs
-x_255 = tf.placeholder(tf.float32, shape=[None, 128, 128, 3])
+x_255 = tf1.placeholder(tf1.float32, shape=[None, 128, 128, 3])
 x = x_255 / 127.5 - 1
-att = tf.placeholder(tf.int64, shape=[None, att_dim])
+att = tf1.placeholder(tf1.int64, shape=[None, att_dim])
 
 # classify
 logits = classifier(x, reuse=False)
 
 # loss
-reg_loss = tf.losses.get_regularization_loss()
-loss = tf.losses.sigmoid_cross_entropy(att, logits) + reg_loss
+reg_loss = tf1.losses.get_regularization_loss()
+loss = tf1.losses.sigmoid_cross_entropy(att, logits) + reg_loss
 acc = mean_accuracy_multi_binary_label_with_logits(att, logits)
 
 # summary
 summary = tl.summary({loss: 'loss', acc: 'acc'})
 
-lr_ = tf.placeholder(tf.float32, shape=[])
+lr_ = tf1.placeholder(tf1.float32, shape=[])
 
 # optim
-#with tf.variable_scope('Adam', reuse=tf.AUTO_REUSE):
-step = tf.train.AdamOptimizer(lr_, beta1=0.9).minimize(loss)
+#with tf1.variable_scope('Adam', reuse=tf1.AUTO_REUSE):
+step = tf1.train.AdamOptimizer(lr_, beta1=0.9).minimize(loss)
 
 # test
 test_logits = classifier(x, training=False)
 test_acc = mean_accuracy_multi_binary_label_with_logits(att, test_logits)
-mean_acc = tf.placeholder(tf.float32, shape=())
+mean_acc = tf1.placeholder(tf1.float32, shape=())
 test_summary = tl.summary({mean_acc: 'test_acc'})
 
 
 """ train """
 ''' init '''
 # session
-sess = tf.Session()
+sess = tf1.Session()
 # iteration counter
 it_cnt, update_cnt = tl.counter()
 # saver
-saver = tf.train.Saver(max_to_keep=None)
+saver = tf1.train.Saver(max_to_keep=None)
 # summary writer
-summary_writer = tf.summary.FileWriter('./summaries', sess.graph)
+summary_writer = tf1.summary.FileWriter('./summaries', sess.graph)
 
 ''' initialization '''
 ckpt_dir = './checkpoints'
 if not os.path.exists(ckpt_dir):
     os.mkdir(ckpt_dir + '/')
 if not tl.load_checkpoint(ckpt_dir, sess):
-    sess.run(tf.global_variables_initializer())
+    sess.run(tf1.global_variables_initializer())
 
 ''' train '''
 try:

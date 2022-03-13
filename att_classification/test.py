@@ -9,6 +9,7 @@ import numpy as np
 import imlib as im
 import tflib as tl
 import tensorflow as tf
+tf1 = tf.compat.v1
 import argparse
 
 from glob import glob
@@ -52,17 +53,17 @@ test_data_pool = tl.TfrecordData(test_tfrecord_path, 1, shuffle=False)
 
 
 """ graphs """
-# with tf.device('/gpu:%d' % gpu_id):
+# with tf1.device('/gpu:%d' % gpu_id):
 ''' models '''
 classifier = models.classifier
 
 ''' graph '''
 # inputs
-x = tf.placeholder(tf.float32, shape=[None, 128, 128, 3])
+x = tf1.placeholder(tf1.float32, shape=[None, 128, 128, 3])
 
 # classify
 logits = classifier(x, reuse=False, training=False)
-pred = tf.cast(tf.round(tf.nn.sigmoid(logits)), tf.int64)
+pred = tf1.cast(tf1.round(tf1.nn.sigmoid(logits)), tf1.int64)
 
 
 """ train """

@@ -7,6 +7,7 @@ from __future__ import print_function
 import six
 
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 from tensorflow.contrib import slim
 
@@ -79,7 +80,7 @@ def fully_connected(inputs,
         a dictionary containing a different list of collections per variable.
       outputs_collections: collection to add the outputs.
       trainable: If `True` also add variables to the graph collection
-        `GraphKeys.TRAINABLE_VARIABLES` (see tf.Variable).
+        `GraphKeys.TRAINABLE_VARIABLES` (see tf1.Variable).
       scope: Optional scope for variable_scope.
 
     Returns:
@@ -188,19 +189,19 @@ flatten_dense_v2 = flatten_fully_connected_v2
 @add_arg_scope
 def flatten_fully_connected_v1(inputs,
                                num_outputs,
-                               activation_fn=tf.nn.relu,
+                               activation_fn=tf1.nn.relu,
                                normalizer_fn=None,
                                normalizer_params=None,
                                weights_initializer=slim.xavier_initializer(),
                                weights_regularizer=None,
-                               biases_initializer=tf.zeros_initializer(),
+                               biases_initializer=tf1.zeros_initializer(),
                                biases_regularizer=None,
                                reuse=None,
                                variables_collections=None,
                                outputs_collections=None,
                                trainable=True,
                                scope=None):
-    with tf.variable_scope(scope, 'flatten_fully_connected_v1'):
+    with tf1.variable_scope(scope, 'flatten_fully_connected_v1'):
         if inputs.shape.ndims > 2:
             inputs = slim.flatten(inputs)
         return slim.fully_connected(inputs,
@@ -305,7 +306,7 @@ def convolution(inputs,
         a dictionary containing a different list of collection per variable.
       outputs_collections: collection to add the outputs.
       trainable: If `True` also add variables to the graph collection
-        `GraphKeys.TRAINABLE_VARIABLES` (see tf.Variable).
+        `GraphKeys.TRAINABLE_VARIABLES` (see tf1.Variable).
       scope: Optional scope for `variable_scope`.
 
     Returns:
@@ -391,65 +392,65 @@ convolution3d = convolution
 def spectral_normalization(weights,
                            num_iterations=1,
                            epsilon=1e-12,
-                           u_initializer=tf.random_normal_initializer(),
-                           updates_collections=tf.GraphKeys.UPDATE_OPS,
+                           u_initializer=tf1.random_normal_initializer(),
+                           updates_collections=tf1.GraphKeys.UPDATE_OPS,
                            is_training=True,
                            reuse=None,
                            variables_collections=None,
                            outputs_collections=None,
                            scope=None):
-    with tf.variable_scope(scope, 'SpectralNorm', [weights], reuse=reuse) as sc:
-        weights = tf.convert_to_tensor(weights)
+    with tf1.variable_scope(scope, 'SpectralNorm', [weights], reuse=reuse) as sc:
+        weights = tf1.convert_to_tensor(weights)
 
         dtype = weights.dtype.base_dtype
 
-        w_t = tf.reshape(weights, [-1, weights.shape.as_list()[-1]])
-        w = tf.transpose(w_t)
+        w_t = tf1.reshape(weights, [-1, weights.shape.as_list()[-1]])
+        w = tf1.transpose(w_t)
         m, n = w.shape.as_list()
 
         u_collections = utils.get_variable_collections(variables_collections, 'u')
-        u = tf.get_variable("u",
+        u = tf1.get_variable("u",
                             shape=[m, 1],
                             dtype=dtype,
                             initializer=u_initializer,
                             trainable=False,
                             collections=u_collections,)
         sigma_collections = utils.get_variable_collections(variables_collections, 'sigma')
-        sigma = tf.get_variable('sigma',
+        sigma = tf1.get_variable('sigma',
                                 shape=[],
                                 dtype=dtype,
-                                initializer=tf.zeros_initializer(),
+                                initializer=tf1.zeros_initializer(),
                                 trainable=False,
                                 collections=sigma_collections)
 
         def _power_iteration(i, u, v):
-            v_ = tf.nn.l2_normalize(tf.matmul(w_t, u), epsilon=epsilon)
-            u_ = tf.nn.l2_normalize(tf.matmul(w, v_), epsilon=epsilon)
+            v_ = tf1.nn.l2_normalize(tf1.matmul(w_t, u), epsilon=epsilon)
+            u_ = tf1.nn.l2_normalize(tf1.matmul(w, v_), epsilon=epsilon)
             return i + 1, u_, v_
 
-        _, u_, v_ = tf.while_loop(
+        _, u_, v_ = tf1.while_loop(
             cond=lambda i, _1, _2: i < num_iterations,
             body=_power_iteration,
-            loop_vars=[tf.constant(0), u, tf.zeros(shape=[n, 1], dtype=tf.float32)]
+            loop_vars=[tf1.constant(0), u, tf1.zeros(shape=[n, 1], dtype=tf1.float32)]
         )
-        u_ = tf.stop_gradient(u_)
-        v_ = tf.stop_gradient(v_)
-        sigma_ = tf.matmul(tf.transpose(u_), tf.matmul(w, v_))[0, 0]
+        u_ = tf1.stop_gradient(u_)
+        v_ = tf1.stop_gradient(v_)
+        sigma_ = tf1.matmul(tf1.transpose(u_), tf1.matmul(w, v_))[0, 0]
 
         update_u = u.assign(u_)
         update_sigma = sigma.assign(sigma_)
         if updates_collections is None:
             def _force_update():
-                with tf.control_dependencies([update_u, update_sigma]):
-                    return tf.identity(sigma_)
+                with tf1.control_dependencies([update_u, update_sigma]):
+                    return tf1.identity(sigma_)
 
             sigma_ = utils.smart_cond(is_training, _force_update, lambda: sigma)
             weights_sn = weights / sigma_
         else:
             sigma_ = utils.smart_cond(is_training, lambda: sigma_, lambda: sigma)
             weights_sn = weights / sigma_
-            tf.add_to_collections(updates_collections, update_u)
-            tf.add_to_collections(updates_collections, update_sigma)
+            tf1.add_to_collections(updates_collections, update_u)
+            tf1.add_to_collections(updates_collections, update_sigma)
 
         return utils.collect_named_outputs(outputs_collections, sc.name, weights_sn)
 
@@ -460,19 +461,19 @@ conv3d = convolution3d
 
 def flatten_fully_connected(inputs,
                             num_outputs,
-                            activation_fn=tf.nn.relu,
+                            activation_fn=tf1.nn.relu,
                             normalizer_fn=None,
                             normalizer_params=None,
                             weights_initializer=slim.xavier_initializer(),
                             weights_regularizer=None,
-                            biases_initializer=tf.zeros_initializer(),
+                            biases_initializer=tf1.zeros_initializer(),
                             biases_regularizer=None,
                             reuse=None,
                             variables_collections=None,
                             outputs_collections=None,
                             trainable=True,
                             scope=None):
-    with tf.variable_scope(scope, 'flatten_fully_connected', [inputs]):
+    with tf1.variable_scope(scope, 'flatten_fully_connected', [inputs]):
         if inputs.shape.ndims > 2:
             inputs = slim.flatten(inputs)
         return slim.fully_connected(inputs,

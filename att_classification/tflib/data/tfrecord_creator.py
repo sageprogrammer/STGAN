@@ -9,6 +9,7 @@ import shutil
 
 import numpy as np
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 from PIL import Image
 from tflib.data import tfrecord
@@ -66,7 +67,7 @@ class BytesTfrecordCreator(object):
         self._writer = None
 
         self._compression_type = compression_type
-        self._options = tf.python_io.TFRecordOptions(compression_type)
+        self._options = tf1.python_io.TFRecordOptions(compression_type)
 
     def __del__(self):
         info = {'item': self._infos, 'info': {'data_num': self._data_num, 'compression_type': self._compression_type}}
@@ -105,7 +106,7 @@ class BytesTfrecordCreator(object):
                 self._writer.close()
 
             tfrecord_path = os.path.join(self._save_path, 'data_%06d.tfrecord' % (self._tfrecord_num - 1))
-            self._writer = tf.python_io.TFRecordWriter(tfrecord_path, self._options)
+            self._writer = tf1.python_io.TFRecordWriter(tfrecord_path, self._options)
 
     def _add_info(self, name, dtype_or_format, shape):
         assert name not in self._info_names, 'Info name "%s" is duplicated!' % name
@@ -115,17 +116,17 @@ class BytesTfrecordCreator(object):
 
     @staticmethod
     def _bytes_feature(values):
-        """Return a TF-Feature of bytes.
+        """Return a tf1-Feature of bytes.
 
         Arguments:
             values : A byte string or list of byte strings.
 
         Returns:
-            A TF-Feature.
+            A tf1-Feature.
         """
         if not isinstance(values, (tuple, list)):
             values = [values]
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=values))
+        return tf1.train.Feature(bytes_list=tf1.train.BytesList(value=values))
 
     @staticmethod
     def _bytes_tfexample(bytes_dict):
@@ -142,7 +143,7 @@ class BytesTfrecordCreator(object):
         feature_dict = {}
         for key, value in bytes_dict.items():
             feature_dict[key] = BytesTfrecordCreator._bytes_feature(value)
-        return tf.train.Example(features=tf.train.Features(feature=feature_dict))
+        return tf1.train.Example(features=tf1.train.Features(feature=feature_dict))
 
 
 class DataLablePairTfrecordCreator(BytesTfrecordCreator):

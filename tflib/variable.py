@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+tf1 = tf.compat.v1
 
 
 def tensors_filter(tensors, filters, combine_type='or'):
@@ -32,7 +33,7 @@ def tensors_filter(tensors, filters, combine_type='or'):
 
 
 def global_variables(filters=None, combine_type='or'):
-    global_vars = tf.compat.v1.global_variables()
+    global_vars = tf1.global_variables()
     if filters is None:
         return global_vars
     else:
@@ -40,7 +41,7 @@ def global_variables(filters=None, combine_type='or'):
 
 
 def trainable_variables(filters=None, combine_type='or'):
-    t_var = tf.compat.v1.trainable_variables()
+    t_var = tf1.trainable_variables()
     if filters is None:
         return t_var
     else:
