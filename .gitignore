@@ -9,3 +9,7 @@ output/
 
 *.pyc
 *.sh
+
+.env
+.vscode
+*.out

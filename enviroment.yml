@@ -1,0 +1,16 @@
+name: /home/manan.sharma/projects/STGAN/.env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - tensorflow
+  - gdown
+  - ca-certificates
+  - openssl
+  - tf_slim
+  - autopep8
+  - matplotlib
+  - certifi
+  - imageio
+prefix: /home/manan.sharma/projects/STGAN/.env
